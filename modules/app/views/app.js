@@ -1,5 +1,6 @@
 
-define(['jquery','backbone','text!../templates/app.html'], function($,Backbone,AppTemplate){
+define(['jquery','backbone','text!../templates/app.html','css!../css/app.css'],
+ function($,Backbone,AppTemplate,AppCss){
 	'use strict';
 	var AppView = Backbone.View.extend({
 		template: _.template(AppTemplate),
