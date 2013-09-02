@@ -1,4 +1,1 @@
-                   sstop_game
-==========================================================
-
-A game where you stop on a cell and accumulate prize
+TODO: update this ...
