@@ -32,7 +32,12 @@ function(Backbone,GameCellModel,require,GameBoardPopulator){
 		getWestBoardIndices: function(){
 			return boardPopulator.getWestIndices();
 		},
-
+		setActive: function(modelIndex){
+			this.at(modelIndex).set('active',true);
+		},
+		getActive: function(modelIndex){
+			return this.at(modelIndex);
+		},
 		sync: function(method, model, options){
 			console.log('GameBoard::sync',arguments);
 			switch(method){

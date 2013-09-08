@@ -17,10 +17,10 @@ background: -ms-linear-gradient(top, rgba(242,249,254,1) 0%,rgba(214,240,253,1) 
 }
 
 
-#north-container img.game-cell:hover, 
-#east-container img.game-cell:hover, 
-#south-container img.game-cell:hover, 
-#west-container img.game-cell:hover
+#north-container img.game-cell.active, 
+#east-container img.game-cell.active, 
+#south-container img.game-cell.active, 
+#west-container img.game-cell.active
 {
  	background-image: none;
  	/*border: 1px dashed white;*/

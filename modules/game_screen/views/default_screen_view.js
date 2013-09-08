@@ -2,24 +2,29 @@ define(['backbone',
 	'layoutManager',
 	'text!../templates/default_screen_view.html',
 	'../models/game_board',
-	'css!../css/default_screen_view.css'],
+	'css!../css/default_screen_view.css',
+	'../utils/game_board_active_cell_picker',
+	'./game_cell_view'],
 
-	function(Backbone,LayoutManager,ScreenViewTmpl,GameBoard,Css){
+	function(Backbone,LayoutManager,ScreenViewTmpl,GameBoard,Css,GameBoardCellPicker,GameCellView){
 
-	var ScreenView = Backbone.View.extend({
+	var gameBoardCellPicker = new GameBoardCellPicker();
+
+	var GameBoardCollectionView = Backbone.View.extend({
 		template: _.template(ScreenViewTmpl),
 		initialize: function(options){
 			console.log("MonitorView::initialize");
-			_.bindAll(this,'render','populate');
+			_.bindAll(this,'render','update');
 			this.gameBoard = new GameBoard();
-			this.$northContainer = null;
-			this.$eastContainer = null;
-			this.$southContainer = null;
-			this.$westContainer = null;
+			this.$template = $(this.template());
+			this.$northContainer = this.$template.find('#north-container');
+			this.$eastContainer = this.$template.find("#east-container");
+			this.$southContainer = this.$template.find("#south-container");
+			this.$westContainer = this.$template.find("#west-container")
+			this.gameCellViews = [];
 			this.animationRequestId = null;
-			this.render();
 			this.gameBoard.fetch({
-				success: this.populate
+				success: this.update
 			});		
 			var self = this;
 			//FOR DEBUGGING 
@@ -32,44 +37,48 @@ define(['backbone',
 					}
 					else{
 						console.log('REGISTERING...');
-						this.animationRequestId =  window.requestAnimationFrame(_.bind(self._onAnimate,self));
+						self.animationRequestId =  window.requestAnimationFrame(_.bind(self._onAnimate,self));
+
 					}
 				}
 			});
 		},
-		populate: function(imageList){
+		update: function(){
 			var self = this;
-			//populate helper
 			function onPopulate(gameBoard,indices,$container){
 				_.each(indices, function(boardIndex){
-					var imageModel = gameBoard.at(boardIndex);
-					var $cell = $(imageModel.get('image'));
-					$cell.attr('class',imageModel.get('cssClass'));
-					//TODO: adjust images to be 64x64 to avoid resizing
-					$cell.width(64);
-					$cell.height(64);
-					$container.append($cell);
+					self.gameCellViews.push(new GameCellView({
+						model: gameBoard.at(boardIndex),
+						el: $container
+					}));
 				});
 			}
 			onPopulate(this.gameBoard,this.gameBoard.getNorthBoardIndices(),this.$northContainer);
 			onPopulate(this.gameBoard,this.gameBoard.getSouthBoardIndices(),this.$southContainer);
 			onPopulate(this.gameBoard,this.gameBoard.getEastBoardIndices(),this.$eastContainer);
 			onPopulate(this.gameBoard,this.gameBoard.getWestBoardIndices(),this.$westContainer);
+			this.render();
 		},
 
 		render: function(){
-			this.clear();
-			var $tmpl = $(this.template());
-			this.$el.append($tmpl);
-			$tmpl.layout(this.getLayoutConfig());
-			//keep reference to the containers
-			this.$northContainer = $("#north-container");
-			this.$eastContainer = $("#east-container");
-			this.$southContainer = $("#south-container");
-			this.$westContainer = $("#west-container");
+			console.log('in render');
+			this.clearContainer();
+			this.$el.append(this.$template);
+			this.$template.layout(this.getLayoutConfig());
+			this.onEachGameCell('render');
 		},
-		clear: function(){
-			this.$el.empty();
+		clearContainer: function(){
+			console.log('in clearContainer');
+			this.onEachGameCell('remove');
+			this.$northContainer.empty();
+			this.$southContainer.empty();
+			this.$eastContainer.empty();
+			this.$westContainer.empty();
+		},
+		onEachGameCell: function(memberFunctionName,args){
+			_.each(this.gameCellViews, function(cell){
+				cell[memberFunctionName](args);
+			})
 		},
 		animate: function(){
 			console.log('animate called');
@@ -95,12 +104,20 @@ define(['backbone',
 		_onAnimate: function(dt){
 			console.log('in _onAnimate, dt =', dt);
 			//mark random cell active
-
-			var randomIndex = _.random(this.gameBoard.models.length);
-
+			var randomCellInfo = gameBoardCellPicker.getNextActiveCell();
+			console.log('randomCellInfo = ',randomCellInfo);
+			var indiceFuncs = [this.gameBoard.getNorthBoardIndices,this.gameBoard.getEastBoardIndices,this.gameBoard.getSouthBoardIndices,this.gameBoard.getWestBoardIndices];
+			var randomCellIndex = indiceFuncs[randomCellInfo.direction]()[randomCellInfo.index];
+			var randomCellModel = this.gameBoard.at(randomCellIndex);
+			if(!randomCellModel){
+				debugger;
+			}
+			if(this._lastActiveModel){this._lastActiveModel.set('active',false);}
+			randomCellModel.set('active',true);
+			this._lastActiveModel = randomCellModel;
 			this.registerAnimation();
 		}
 
 	});
-	return ScreenView;
+	return GameBoardCollectionView;
 })

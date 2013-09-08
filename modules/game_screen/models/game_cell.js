@@ -10,12 +10,7 @@ function(Backbone,CellCss){
 			active: false
 		},
 		initialize: function(){
-			this.on('change:active',this.onActiveChange,this);
-		},
-		onActiveChange: function(){
-			//TODO: create a GameCellView class that handles the changes to class attributes, ex on change:active need to add .active class
 		}
-
 	});
 	return GameCellModel;
 })

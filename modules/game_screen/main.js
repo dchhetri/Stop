@@ -1,9 +1,9 @@
 define(['backbone','./views/default_screen_view'],
-	function(Backbone,DefaultScreenView){
+	function(Backbone,GameBoardView){
 
 	var ScreenView = Backbone.View.extend({
 		initialize: function(options){
-			this.monitor = new DefaultScreenView({
+			this.monitor = new GameBoardView({
 				el: this.$el
 			});
 			this.render();
