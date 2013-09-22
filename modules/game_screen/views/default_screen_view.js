@@ -10,6 +10,15 @@ define(['backbone',
 
 	var gameBoardCellPicker = new GameBoardCellPicker();
 
+(function() {
+  var requestAnimationFrame = 	window.requestAnimationFrame || window.mozRequestAnimationFrame ||
+                              	window.webkitRequestAnimationFrame || window.msRequestAnimationFrame
+                              ||function( callback ){
+            						window.setTimeout(callback, 1000 / 60);
+          						};
+  window.requestAnimationFrame = requestAnimationFrame;
+})();
+
 	var GameBoardCollectionView = Backbone.View.extend({
 		template: _.template(ScreenViewTmpl),
 		initialize: function(options){
@@ -20,7 +29,8 @@ define(['backbone',
 			this.$northContainer = this.$template.find('#north-container');
 			this.$eastContainer = this.$template.find("#east-container");
 			this.$southContainer = this.$template.find("#south-container");
-			this.$westContainer = this.$template.find("#west-container")
+			this.$westContainer = this.$template.find("#west-container");
+			this.$centerContainer = this.$template.find('#center-container');
 			this.gameCellViews = [];
 			this.animationRequestId = null;
 			this.gameBoard.fetch({
@@ -43,6 +53,7 @@ define(['backbone',
 				}
 			});
 		},
+		//
 		update: function(){
 			var self = this;
 			function onPopulate(gameBoard,indices,$container){
@@ -66,6 +77,30 @@ define(['backbone',
 			this.$el.append(this.$template);
 			this.$template.layout(this.getLayoutConfig());
 			this.onEachGameCell('render');
+
+			this.$centerContainer.empty();
+			var stopIcon = $(document.createElement('img')).attr('src','./resources/images/stop-icon.png');
+			stopIcon.css({
+				'width': '256px',
+				'height': '192px'
+			})
+			stopIcon.on('click',_.bind(function(){
+				var self = this;
+				if(self.animationRequestId){
+						console.log('CANCELing...');
+						$("body").append('<p>canceling</p>');
+						window.cancelAnimationFrame(self.animationRequestId);
+						self.animationRequestId = null;
+					}
+					else{
+						console.log('REGISTERING...');
+						$("body").append('<p>REGISTERING</p>');
+						self.animationRequestId =  window.requestAnimationFrame(_.bind(self._onAnimate,self));
+
+					}
+			},this));
+			this.$centerContainer.append(stopIcon);
+
 		},
 		clearContainer: function(){
 			console.log('in clearContainer');
